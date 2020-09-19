@@ -116,7 +116,7 @@ SCL.simulate(sim_lmax, sim_nside)
 
 ## Citing
 
-More details once code is official released.
+More details will be provided once the code is official released.
 
 ## Support
 
