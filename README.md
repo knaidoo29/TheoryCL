@@ -18,22 +18,20 @@ Clone the github repository:
 git clone https://github.com/knaidoo29/TheoryCL
 ```
 
-To install either use pip:
+To install use pip:
 
 ```
 cd TheoryCL
 pip install -e . [--user]
 ```
 
-or install using setup:
+or use setup:
 
 ```
 cd TheoryCL
 python setup.py build
 python setup.py install
 ```
-
-You should now be able to import the module.
 
 ## Tutorial
 
@@ -118,7 +116,7 @@ SCL.simulate(sim_lmax, sim_nside)
 
 ## Citing
 
-
+More details once code is official released.
 
 ## Support
 
