@@ -25,7 +25,7 @@ def z2a(z):
     return 1./(1.+z)
 
 
-def _get_ez(z, omega_m, omega_l):
+def _get_ez(z, omega_m, omega_l, omega_r):
     """Returns the total amount of matter + dark energy at z.
 
     Parameters
@@ -35,12 +35,14 @@ def _get_ez(z, omega_m, omega_l):
     omega_m : float
         Present matter density.
     omega_l : float
-        Present dark energy density
+        Present dark energy density.
+    omega_r : float
+        Present radiation density.
     """
-    return np.sqrt(omega_m*(1.+z)**3 + omega_l)
+    return np.sqrt(omega_r*(1.+z)**4 + omega_m*(1.+z)**3 + omega_l)
 
 
-def get_Hz(z, omega_m, omega_l, h0):
+def get_Hz(z, omega_m, omega_l, omega_r, h0):
     """Returns the hubble expansion at z.
 
     Parameters
@@ -50,14 +52,16 @@ def get_Hz(z, omega_m, omega_l, h0):
     omega_m : float
         Present matter density.
     omega_l : float
-        Present dark energy density
+        Present dark energy density.
+    omega_r : float
+        Present radiation density.
     h0 : float
         Hubble constant.
     """
-    return (100.*h0)*_get_ez(z, omega_m, omega_l)
+    return (100.*h0)*_get_ez(z, omega_m, omega_l, omega_r)
 
 
-def _get_Dz_integrand(z, omega_m, omega_l, h0):
+def _get_Dz_integrand(z, omega_m, omega_l, omega_r, h0):
     """Integral for the linear growth function.
 
     Parameters
@@ -67,14 +71,16 @@ def _get_Dz_integrand(z, omega_m, omega_l, h0):
     omega_m : float
         Present matter density.
     omega_l : float
-        Present dark energy density
+        Present dark energy density.
+    omega_r : float
+        Present radiation density.
     h0 : float
         Hubble constant.
     """
-    return (1.+z)/(get_Hz(z, omega_m, omega_l, h0)**3.)
+    return (1.+z)/(get_Hz(z, omega_m, omega_l, omega_r, h0)**3.)
 
 
-def _get_Dz_val(z, omega_m, omega_l, h0):
+def _get_Dz_val(z, omega_m, omega_l, omega_r, h0):
     """Normalised linear growth function for one z value.
 
     Parameters
@@ -84,18 +90,20 @@ def _get_Dz_val(z, omega_m, omega_l, h0):
     omega_m : float
         Present matter density.
     omega_l : float
-        Present dark energy density
+        Present dark energy density.
+    omega_r : float
+        Present radiation density.
     h0 : float
         Hubble constant.
     """
-    Dz_0, err = integrate.quad(_get_Dz_integrand, 0., np.infty, args=(omega_m, omega_l, h0))
-    Dz_0 *= get_Hz(0., omega_m, omega_l, h0)
-    Dz, err = integrate.quad(_get_Dz_integrand, z, np.infty, args=(omega_m, omega_l, h0))
-    Dz *= get_Hz(z, omega_m, omega_l, h0)
+    Dz_0, err = integrate.quad(_get_Dz_integrand, 0., np.infty, args=(omega_m, omega_l, omega_r, h0))
+    Dz_0 *= get_Hz(0., omega_m, omega_l, omega_r, h0)
+    Dz, err = integrate.quad(_get_Dz_integrand, z, np.infty, args=(omega_m, omega_l, omega_r, h0))
+    Dz *= get_Hz(z, omega_m, omega_l, omega_r, h0)
     return Dz/Dz_0
 
 
-def get_Dz(z, omega_m, omega_l, h0):
+def get_Dz(z, omega_m, omega_l, omega_r, h0):
     """Normalised linear growth function for z float or array.
 
     Parameters
@@ -105,17 +113,19 @@ def get_Dz(z, omega_m, omega_l, h0):
     omega_m : float
         Present matter density.
     omega_l : float
-        Present dark energy density
+        Present dark energy density.
+    omega_r : float
+        Present radiation density.
     h0 : float
         Hubble constant.
     """
     if np.isscalar(z) == False:
-        Dz = np.array([_get_Dz_val(z_val, omega_m, omega_l, h0) for z_val in z])
+        Dz = np.array([_get_Dz_val(z_val, omega_m, omega_l, omega_r, h0) for z_val in z])
     else:
-        Dz = _get_Dz_val(z, omega_m, omega_l, h0)
+        Dz = _get_Dz_val(z, omega_m, omega_l, omega_r, h0)
     return Dz
 
-def _get_r_integrand(z, omega_m, omega_l):
+def _get_r_integrand(z, omega_m, omega_l, omega_r):
     """Comoving distance integral.
 
     Parameters
@@ -125,12 +135,14 @@ def _get_r_integrand(z, omega_m, omega_l):
     omega_m : float
         Present matter density.
     omega_l : float
-        Present dark energy density
+        Present dark energy density.
+    omega_r : float
+        Present radiation density.
     """
-    return 1./_get_ez(z, omega_m , omega_l)
+    return 1./_get_ez(z, omega_m , omega_l, omega_r)
 
 
-def _get_r_val(z, omega_m, omega_l):
+def _get_r_val(z, omega_m, omega_l, omega_r):
     """Returns the comoving distance at for one z value.
 
     Parameters
@@ -140,14 +152,16 @@ def _get_r_val(z, omega_m, omega_l):
     omega_m : float
         Present matter density.
     omega_l : float
-        Present dark energy density
+        Present dark energy density.
+    omega_r : float
+        Present radiation density.
     """
-    r, err = integrate.quad(_get_r_integrand, 0., z, args=(omega_m, omega_l))
+    r, err = integrate.quad(_get_r_integrand, 0., z, args=(omega_m, omega_l, omega_r))
     r *= 3000.
     return r
 
 
-def get_r(z, omega_m, omega_l):
+def get_r(z, omega_m, omega_l, omega_r):
     """Returns the comoving distance at z.
 
     Parameters
@@ -157,16 +171,18 @@ def get_r(z, omega_m, omega_l):
     omega_m : float
         Present matter density.
     omega_l : float
-        Present dark energy density
+        Present dark energy density.
+    omega_r : float
+        Present radiation density.
     """
     if np.isscalar(z) == False:
-        r = np.array([_get_r_val(z_val, omega_m, omega_l) for z_val in z])
+        r = np.array([_get_r_val(z_val, omega_m, omega_l, omega_r) for z_val in z])
     else:
-        r = _get_r_val(z, omega_m, omega_l)
+        r = _get_r_val(z, omega_m, omega_l, omega_r)
     return r
 
 
-def get_omega_m_z(z, omega_m, omega_l):
+def get_omega_m_z(z, omega_m, omega_l, omega_r):
     """Returns the matter density at z.
 
     Parameters
@@ -176,12 +192,14 @@ def get_omega_m_z(z, omega_m, omega_l):
     omega_m : float
         Present matter density.
     omega_l : float
-        Present dark energy density
+        Present dark energy density.
+    omega_r : float
+        Present radiation density.
     """
-    return (omega_m*(1.+z)**3.)/_get_ez(z, omega_m, omega_l)**2.
+    return (omega_m*(1.+z)**3.)/_get_ez(z, omega_m, omega_l, omega_r)**2.
 
 
-def get_fz(z, omega_m, omega_l, alpha=0.6):
+def get_fz(z, omega_m, omega_l, omega_r, alpha=0.55):
     """Returns the approximation of the growth function dlnD/dlna.
 
     Parameters
@@ -192,10 +210,65 @@ def get_fz(z, omega_m, omega_l, alpha=0.6):
         Present matter density.
     omega_l : float
         Present dark energy density.
+    omega_r : float
+        Present radiation density.
     alpha : float
         default = 0.6.
     """
-    return get_omega_m_z(z, omega_m, omega_l)**alpha
+    return get_omega_m_z(z, omega_m, omega_l, omega_r)**alpha
+
+
+def get_fz_numerical(z, Dz):
+    """Calculates f(z) numerically from linear growth function.
+
+    Parameters
+    ----------
+    z : array
+        Tabulated redshift.
+    Dz : array
+        Tabulated linear growth function.
+
+    Returns
+    -------
+    fz : array
+        Returns numerical fz.
+    """
+    # calculate the scale factor
+    a = 1./(1.+z)
+    # calculate logD and loga
+    logD = np.log(Dz[::-1])
+    loga = np.log(a[::-1])
+    # use df/dx = (f(x+h) - f(x)) / h
+    dlogD = logD[1:] - logD[:-1]
+    dloga = loga[1:] - loga[:-1]
+    fz = np.zeros(len(a))
+    fz[:-1] = dlogD/dloga
+    # use df/dx = (f(x) - f(x-h)) / h
+    dlogD = logD[-1] - logD[-2]
+    dloga = loga[-1] - loga[-2]
+    fz[-1] = dlogD/dloga
+    fz = fz[::-1]
+    return fz
+
+
+def get_sigma_8(kh, pk):
+    """Calulates sigma_8 from an input power spectrum.
+
+    Parameters
+    ----------
+    kh, pk : array_like
+        The linear power spectrum and corresponding k value.
+
+    Returns
+    -------
+    sigma_8 : float
+        The calculated value of sigma_8.
+    """
+    w = 3.*(np.sin(kh*8.)-(kh*8.*np.cos(kh*8.)))/(kh*8.)**3.
+    integrand = kh*kh*pk*w*w
+    sigma_8_2 = (1./(2.*np.pi**2.))*integrate.simps(integrand, kh)
+    sigma_8 = sigma_8_2**0.5
+    return sigma_8
 
 
 def get_z_array(zmin, zmax, zbin_num, zbin_mode='linear'):

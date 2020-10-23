@@ -222,7 +222,7 @@ class SourceCL(lgc.CosmoLinearGrowth):
 
     def setup(self, Lmax, zmin=0., zmax=5., rbin_num=1000, rbin_mode='linear',
               kmin=None, kmax=None, kbin_num=1000, kbin_mode='log',
-              switch2limber=30, Tcmb=2.7255):
+              switch2limber=30, Tcmb=2.7255, renormalise=True):
         self.Lmax = Lmax
         self.switch2limber = switch2limber
         self.Tcmb = 2.7255
@@ -250,6 +250,7 @@ class SourceCL(lgc.CosmoLinearGrowth):
             self.r_int = np.linspace(self.get_rz(zmin), self.get_rz(zmax), rbin_num)
         elif rbin_mode == 'log':
             self.r_int = np.logspace(np.log10(self.get_rz(zmin)), np.log10(self.get_rz(zmax)), rbin_num)
+        self.renormalise = renormalise
 
 
     def _get_W(self, r, k, l, source_X):
@@ -282,7 +283,7 @@ class SourceCL(lgc.CosmoLinearGrowth):
             Ws.append(W_X)
         # get interpolated power spectrum values
         pk = np.zeros(len(kl))
-        pk[condition] = self.get_pk(kl[condition])
+        pk[condition] = self.get_pk(kl[condition], renormalise=self.renormalise)
         integral_CL_XY_limber_base = (Dz**2.)*pk
         if self.r_int[0] == 0.:
             integral_CL_XY_limber_base[0] = 0.
@@ -302,12 +303,16 @@ class SourceCL(lgc.CosmoLinearGrowth):
         Dz = self.get_Dr(self.r_int)
         # cycle through sources
         Ils = []
+        #x = np.linspace(0., self.r_int.max()*self.k_int.max()+1., 1000)
+        #jl = sb.get_jl(x, l)
+        #jl_interpolator = interp1d(x, jl, kind='cubic', fill_value=0., bounds_error=True)
         for i in range(1, self.source_count+1):
             source_X = i
             Il_X = [integrate.simps(Dz*self._get_W(self.r_int, k_val, l, source_X)*sb.get_jl(k_val*rz, l), self.r_int) for k_val in self.k_int]
+            #Il_X = [integrate.simps(Dz*self._get_W(self.r_int, k_val, l, source_X)*jl_interpolator(k_val*self.r_int), self.r_int) for k_val in self.k_int]
             Ils.append(Il_X)
         # get interpolated power spectrum values
-        pk = self.get_pk(self.k_int)
+        pk = self.get_pk(self.k_int, renormalise=self.renormalise)
         CLs_XY = np.array([(2./np.pi)*integrate.simps((self.k_int**2.)*pk*Ils[self.sources_X[i]-1]*Ils[self.sources_Y[i]-1], self.k_int) for i in range(0, len(self.sources_X))])
         CLs_XY *= (self.MPC/self.h0)**2.
         return CLs_XY
