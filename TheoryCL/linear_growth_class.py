@@ -415,9 +415,9 @@ class CosmoLinearGrowth:
         self.interp_pk_log = interp_log
         self.num_sigma8 = lgf.get_sigma_8(kh, pk)
         if self.interp_pk_log == False:
-            self.numerical_pk_interpolator = interp1d(self.pk_table, self.kh_table, kind=kind)
+            self.numerical_pk_interpolator = interp1d(self.kh_table, self.pk_table, kind=kind)
         else:
-            self.numerical_pk_interpolator = interp1d(np.log10(self.pk_table), np.log10(self.kh_table), kind=kind)
+            self.numerical_pk_interpolator = interp1d(np.log10(self.kh_table), np.log10(self.pk_table), kind=kind)
 
 
     def get_pk(self, k, renormalise=False):
