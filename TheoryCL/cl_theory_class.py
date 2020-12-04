@@ -6,6 +6,7 @@ from . import progress
 from . import spherical_bessel as sb
 from . import linear_growth_class as lgc
 
+
 class SourceCL(lgc.CosmoLinearGrowth):
 
     """Function for calculating the auto- and cross-angular power spectra for
@@ -40,7 +41,7 @@ class SourceCL(lgc.CosmoLinearGrowth):
         CosmoLinearGrowth : class
             Parent class for calculating Cosmological linear growth functions.
         """
-        CosmoLinearGrowth.__init__()
+        super(SourceCL, self).__init__()
         self.switch2limber = None
         self.C = 3e8
         self.MPC = 3.0856e22

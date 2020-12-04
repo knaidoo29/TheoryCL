@@ -130,7 +130,7 @@ class CosmoLinearGrowth:
         self.omega_r = omega_r
 
 
-    def calc_table(self, zmin=0., zmax=10., zbin_num=1000, zbin_mode='linear', alpha=0.6, kind='cubic'):
+    def calc_table(self, zmin=0., zmax=10., zbin_num=1000, zbin_mode='linear', alpha=0.6, kind='cubic', use_f_numerical=False):
         """Constructs table of cosmological linear functions to be interpolated for speed.
 
         Parameters
@@ -147,6 +147,8 @@ class CosmoLinearGrowth:
             The power in the approximation to f(z) = Omega_m(z)**alpha
         kind : str
             The kind of interpolation used by the created interpolation functions as function of z and r.
+        use_f_numerical : bool
+            If True will calculate f numerically.
         """
         # store some variables for table generation
         self.zmin = zmin # minimum redshift for table
@@ -160,7 +162,10 @@ class CosmoLinearGrowth:
         self.rz_table = lgf.get_r(self.z_table, self.omega_m, self.omega_l, self.omega_r)
         self.Hz_table = lgf.get_Hz(self.z_table, self.omega_m, self.omega_l, self.omega_r, self.h0)
         self.Dz_table = lgf.get_Dz(self.z_table, self.omega_m, self.omega_l, self.omega_r, self.h0)
-        self.fz_table = lgf.get_fz(self.z_table, self.omega_m, self.omega_l, self.omega_r, self.alpha)
+        if use_f_numerical == False:
+            self.fz_table = lgf.get_fz(self.z_table, self.omega_m, self.omega_l, self.omega_r, self.alpha)
+        else:
+            self.fz_table = lgf.get_fz_numerical(self.z_table, self.Dz_table)
         # constructs callable interpolators for rz, Hz, Dz and fz
         self.rz_interpolator = interp1d(self.z_table, self.rz_table, kind=kind)
         self.Hz_interpolator = interp1d(self.z_table, self.Hz_table, kind=kind)
