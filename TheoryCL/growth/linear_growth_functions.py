@@ -125,6 +125,22 @@ def get_Dz(z, omega_m, omega_l, omega_r, h0):
         Dz = _get_Dz_val(z, omega_m, omega_l, omega_r, h0)
     return Dz
 
+
+def get_D2z(Dz, prefix=-3./7.):
+    """Gets the second-order growth function D2 at redshift z using the approximation
+    D2 = -(3/7)D^2.
+
+    Parameters
+    ----------
+    z : float
+        Redshift.
+    interp : bool
+        If true value is interpolated from pre-tabulated values of Dz, if not this
+        is calculated exactly.
+    """
+    return prefix*(Dz**2.)
+
+
 def _get_r_integrand(z, omega_m, omega_l, omega_r):
     """Comoving distance integral.
 
@@ -216,6 +232,25 @@ def get_fz(z, omega_m, omega_l, omega_r, alpha=0.55):
         default = 0.6.
     """
     return get_omega_m_z(z, omega_m, omega_l, omega_r)**alpha
+
+
+def get_f2z(z, omega_m, omega_l, omega_r, alpha=6./11.):
+    """Returns the approximation of the second-order growth function dlnD/dlna.
+
+    Parameters
+    ----------
+    z : float
+        Redshift.
+    omega_m : float
+        Present matter density.
+    omega_l : float
+        Present dark energy density.
+    omega_r : float
+        Present radiation density.
+    alpha : float
+        default = 6/11.
+    """
+    return 2.*get_omega_m_z(z, omega_m, omega_l, omega_r)**alpha
 
 
 def get_fz_numerical(z, Dz):
