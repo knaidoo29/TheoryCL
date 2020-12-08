@@ -2,12 +2,12 @@ import numpy as np
 from scipy import integrate
 from scipy.interpolate import interp1d
 import healpy as hp
-from . import progress
-from . import spherical_bessel as sb
-from . import linear_growth_class as lgc
+from .. import utils
+from .. import maths
+from .. import growth
 
 
-class SourceCL(lgc.CosmoLinearGrowth):
+class SourceCL(growth.CosmoLinearGrowth):
 
     """Function for calculating the auto- and cross-angular power spectra for
     sources of the galaxy distribution, ISW and lensing. This class inherits
@@ -309,7 +309,7 @@ class SourceCL(lgc.CosmoLinearGrowth):
         #jl_interpolator = interp1d(x, jl, kind='cubic', fill_value=0., bounds_error=True)
         for i in range(1, self.source_count+1):
             source_X = i
-            Il_X = [integrate.simps(Dz*self._get_W(self.r_int, k_val, l, source_X)*sb.get_jl(k_val*rz, l), self.r_int) for k_val in self.k_int]
+            Il_X = [integrate.simps(Dz*self._get_W(self.r_int, k_val, l, source_X)*maths.get_jl(k_val*rz, l), self.r_int) for k_val in self.k_int]
             #Il_X = [integrate.simps(Dz*self._get_W(self.r_int, k_val, l, source_X)*jl_interpolator(k_val*self.r_int), self.r_int) for k_val in self.k_int]
             Ils.append(Il_X)
         # get interpolated power spectrum values
@@ -330,9 +330,9 @@ class SourceCL(lgc.CosmoLinearGrowth):
             if self.L[i] <= self.switch2limber:
                 _CLs = self._get_CL_XY(self.L[i])
                 self.CLs_full.append(_CLs)
-                progress.progress_bar(i, self.switch2limber -2 + 1, explanation='Calculating Cls (Full)    L = '+str(self.L[i])+' / '+str(self.switch2limber))
+                utils.progress_bar(i, self.switch2limber -2 + 1, explanation='Calculating Cls (Full)    L = '+str(self.L[i])+' / '+str(self.switch2limber))
             else:
-                progress.progress_bar(i - self.switch2limber, self.Lmax - self.switch2limber - 1, explanation='Calculating Cls (Approx.) L = '+str(self.L[i])+' / '+str(self.Lmax))#, num_refresh=len(self.L)-self.switch2limber-2)
+                utils.progress_bar(i - self.switch2limber, self.Lmax - self.switch2limber - 1, explanation='Calculating Cls (Approx.) L = '+str(self.L[i])+' / '+str(self.Lmax))#, num_refresh=len(self.L)-self.switch2limber-2)
         self.CLs_full = np.array(self.CLs_full)
         self.CLs_approx = np.array(self.CLs_approx)
         condition = np.where(self.L_full >= self.switch2limber-5)[0]
