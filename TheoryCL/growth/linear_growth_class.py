@@ -245,7 +245,7 @@ class CosmoLinearGrowth:
         self.fz_table = fz_interp(self.z_table)
         self.fz_interpolator = interp1d(self.z_table, self.fz_table, kind=kind)
         self.fr_interpolator = interp1d(self.rz_table, self.fz_table, kind=kind)
-        f2z = lgf.get_fz_numerical(z, self.D2z_interpolator(z))
+        f2z = lgf.get_fz_numerical(z, -self.D2z_interpolator(z))
         f2z_interp = interp1d(z, f2z, kind=kind)
         self.f2z_table = f2z_interp(self.z_table)
         self.f2z_interpolator = interp1d(self.z_table, self.f2z_table, kind=kind)
