@@ -1,4 +1,4 @@
-# TheoryCL -- IN DEVELOPMENT
+# TheoryCL
 
 TheoryCL is a python module for computing the theoretical auto- and cross- angular power spectra for the integrated Sachs-Wolfe, galaxy/matter distribution and lensing computed either from a top-hat sample distribution or from a given redshift distribution.
 
@@ -58,16 +58,17 @@ SCL.calc_table(zmin=0., zmax=10., zbin_num=10000, zbin_mode='log')
 # Calculates the linear power spectra using CAMB and create callable interpolator.
 SCL.calc_pk()
 
-lmax = 700 # maximum l mode to compute CLs.
-zmin = 0. # minimum redshift integrals along the line-of-sight are computed to.
-zmax = 5. # maximum redshift to which integrals along the line-of-sight are computed to.
-rbin_num = 1000 # number of bins along radial coordinates for integration.
-rbin_mode = 'linear' # linear or log binning schemes.
-kmin = None # minimum k for integrals, if None defaults to minimum value pre-calculated by CAMB.
-kmax = 1. # maximum k for integrals
-kbin_num = 1000 # number of bins in Fourier coordinates for integration.
-kbin_mode = 'log' # linear or log binning schemes.
-switch2limber = 30 # beyond this l we only compute the CLs using the Limber/flat-sky approximation.
+lmax              = 700           # maximum l mode to compute CLs.
+zmin              = 0.            # minimum redshift integrals along the line-of-sight are computed to.
+zmax              = 5.            # maximum redshift to which integrals along the line-of-sight are computed to.
+rbin_num          = 1000          # number of bins along radial coordinates for integration.
+rbin_mode         = 'linear'      # linear or log binning schemes.
+kmin              = None          # minimum k for integrals, if None defaults to minimum value pre-calculated by CAMB.
+kmax              = 1.            # maximum k for integrals
+kbin_num          = 1000          # number of bins in Fourier coordinates for integration.
+kbin_mode         = 'log'         # linear or log binning schemes.
+switch2limber     = 30            # beyond this l we only compute the CLs using the Limber/flat-sky approximation.
+
 SCL.setup(lmax, zmin=zmin, zmax=zmax, rbin_num=rbin_num, rbin_mode=rbin_mode,
           kmin=kmin, kmax=kmax, kbin_num=kbin_num, kbin_mode=kbin_mode,
           switch2limber=switch2limber)
@@ -116,7 +117,8 @@ SCL.simulate(sim_lmax, sim_nside)
 
 ## Citing
 
-More details will be provided once the code is official released.
+If you use this package please provide a link to the github repository and cite
+the following paper *ArXiv Link*.
 
 ## Support
 
