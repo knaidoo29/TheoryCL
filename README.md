@@ -1,5 +1,9 @@
 # TheoryCL
 
+Author:         Krishna Naidoo                          
+Version:        0.0.0                               
+Homepage:       https://github.com/knaidoo29/TheoryCL    
+
 TheoryCL is a python module for computing the theoretical auto- and cross- angular power spectra for the integrated Sachs-Wolfe, galaxy/matter distribution and lensing computed either from a top-hat sample distribution or from a given redshift distribution.
 
 Note: aspect of the code that run lensing have not fully been tested yet.
