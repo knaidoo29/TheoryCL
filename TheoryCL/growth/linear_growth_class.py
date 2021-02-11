@@ -203,7 +203,7 @@ class CosmoLinearGrowth:
         ----------
         z_table : array
             Tabulated redshift.
-        Dz_tan;e : array
+        Dz_table : array
             Tabulated linear growth function.zbin_num : int
         kind : str
             The kind of interpolation used by the created interpolation functions as function of z and r.
@@ -239,15 +239,10 @@ class CosmoLinearGrowth:
         self.Dr_interpolator = interp1d(self.rz_table, self.Dz_table, kind=kind)
         self.D2r_interpolator = interp1d(self.rz_table, self.D2z_table, kind=kind)
         # Calculating fz table
-        z = lgf.get_z_array(self.zmin, self.zmax, int(self.zbin_num*zbin_factor), self.zbin_mode)
-        fz = lgf.get_fz_numerical(z, self.Dz_interpolator(z))
-        fz_interp = interp1d(z, fz, kind=kind)
-        self.fz_table = fz_interp(self.z_table)
+        self.fz_table = lgf.get_fz_numerical(z_table, Dz_table)
         self.fz_interpolator = interp1d(self.z_table, self.fz_table, kind=kind)
         self.fr_interpolator = interp1d(self.rz_table, self.fz_table, kind=kind)
-        f2z = lgf.get_fz_numerical(z, -self.D2z_interpolator(z))
-        f2z_interp = interp1d(z, f2z, kind=kind)
-        self.f2z_table = f2z_interp(self.z_table)
+        self.f2z_table = lgf.get_fz_numerical(self.z_table, -self.D2z_interpolator(self.z_table))
         self.f2z_interpolator = interp1d(self.z_table, self.f2z_table, kind=kind)
         self.f2r_interpolator = interp1d(self.rz_table, self.f2z_table, kind=kind)
 

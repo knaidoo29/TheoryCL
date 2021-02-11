@@ -2,6 +2,8 @@ import numpy as np
 from scipy import integrate
 from scipy.interpolate import interp1d
 
+from .. import maths
+
 
 def a2z(a):
     """Converts a to z.
@@ -253,7 +255,7 @@ def get_f2z(z, omega_m, omega_l, omega_r, alpha=6./11.):
     return 2.*get_omega_m_z(z, omega_m, omega_l, omega_r)**alpha
 
 
-def get_fz_numerical(z, Dz):
+def get_fz_numerical(z, Dz, **kwargs):
     """Calculates f(z) numerically from linear growth function.
 
     Parameters
@@ -268,21 +270,10 @@ def get_fz_numerical(z, Dz):
     fz : array
         Returns numerical fz.
     """
-    # calculate the scale factor
-    a = 1./(1.+z)
-    # calculate logD and loga
-    logD = np.log(Dz[::-1])
-    loga = np.log(a[::-1])
-    # use df/dx = (f(x+h) - f(x)) / h
-    dlogD = logD[1:] - logD[:-1]
-    dloga = loga[1:] - loga[:-1]
-    fz = np.zeros(len(a))
-    fz[:-1] = dlogD/dloga
-    # use df/dx = (f(x) - f(x-h)) / h
-    dlogD = logD[-1] - logD[-2]
-    dloga = loga[-1] - loga[-2]
-    fz[-1] = dlogD/dloga
-    fz = fz[::-1]
+    a = z2a(z)
+    loga = np.log(a)
+    logD = np.log(Dz)
+    fz = maths.numerical_differentiate(loga, logD, **kwargs)
     return fz
 
 
