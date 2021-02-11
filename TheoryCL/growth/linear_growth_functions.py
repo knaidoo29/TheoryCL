@@ -261,7 +261,8 @@ def get_fz_numerical(z, Dz, **kwargs):
     Parameters
     ----------
     z : array
-        Tabulated redshift.
+        Tabulated redshift, must be in descending order, so large z to small z,
+        which ensure loga is ascending.
     Dz : array
         Tabulated linear growth function.
 

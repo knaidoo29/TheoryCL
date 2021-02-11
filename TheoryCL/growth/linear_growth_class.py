@@ -214,11 +214,10 @@ class CosmoLinearGrowth:
         D2_const : float
             Constant infront of the D2 approximation, D2 = D2_const*(Dz)**2.
         """
-        self.use_numerical = False
+        self.use_numerical = True
         self.zmin = z_table.min()
         self.zmax = z_table.max()
         self.zbin_num = len(z_table)
-        self.zbin_mode = zbin_mode
         # construct z array
         self.z_table = z_table
         # construct linear functions, use LCDM for r and H
