@@ -67,23 +67,18 @@ class CosmoLinearGrowth:
         self.ns = None
         self.As = None
         self.sigma8 = None
-        self.omega_r = None
         # z binnings for table
         self.zmin = None
         self.zmax = None
         self.zbin_num = None
         self.zbin_mode = None
         # table
-        self.f1_alpha = None
-        self.f2_alpha = None
-        self.D2_const = None
+        self.f_alpha = None
         self.z_table = None
         self.rz_table = None
         self.Hz_table = None
         self.Dz_table = None
         self.fz_table = None
-        self.D2z_table = None
-        self.f2z_table = None
         # power spectrum terms
         self.z_pk = None
         self.kmin = None
@@ -103,7 +98,7 @@ class CosmoLinearGrowth:
 
 
     def cosmo(self, omega_m=0.25, omega_l=0.75, h0=0.7, omega_b=0.044, ns=0.95,
-              As=2.45e-9, sigma8=0.8, omega_r=0.):
+              As=2.45e-9, sigma8=0.8):
         """Sets cosmological parameters.
 
         Parameters
@@ -122,8 +117,6 @@ class CosmoLinearGrowth:
             Amplitude of scalar fluctations.
         sigma8 : float
             Variance of density perturbations in spheres with radius 8 Mpc/h.
-        omega_r : float
-            Current radiation density.
         """
         self.omega_m = omega_m
         self.omega_l = omega_l
@@ -132,10 +125,10 @@ class CosmoLinearGrowth:
         self.ns = ns
         self.As = As
         self.sigma8 = sigma8
-        self.omega_r = omega_r
 
 
-    def calc_table(self, zmin=0., zmax=10., zbin_num=1000, zbin_mode='linear', alpha=5./9., alpha2=6./11., kind='cubic', use_f_numerical=False, D2_const=-3./7.):
+    def calc_table(self, zmin=0., zmax=10., zbin_num=1000, zbin_mode='linear', alpha=0.55,
+                   kind='cubic', use_f_numerical=True):
         """Constructs table of cosmological linear functions to be interpolated for speed.
 
         Parameters
@@ -150,53 +143,40 @@ class CosmoLinearGrowth:
             Redshift binning, either linear or log of 1+z.
         alpha : float
             The power in the approximation to f(z) = Omega_m(z)**alpha
-        beta : float
-            The power in the approximation to f2(z) = Omega_m(z)**beta
         kind : str
             The kind of interpolation used by the created interpolation functions as function of z and r.
         use_f_numerical : bool
             If True will calculate f numerically.
-        D2_const : float
-            Constant infront of the D2 approximation, D2 = D2_const*(Dz)**2.
         """
         # store some variables for table generation
         self.zmin = zmin # minimum redshift for table
         self.zmax = zmax # maximum redshift for table
         self.zbin_num = zbin_num # size of array
         self.zbin_mode = zbin_mode # linear or log
-        self.f1_alpha = alpha # for fz approximation
-        self.f2_alpha = alpha2 # for f2z approximation
-        self.D2_const = D2_const # for D2z approximation
+        self.f_alpha = alpha # for fz approximation
         # construct z array
         self.z_table = lgf.get_z_array(self.zmin, self.zmax, self.zbin_num, self.zbin_mode)
         # constructs table of linear growth functions rz, Hz, Dz and fz
-        self.rz_table = lgf.get_r(self.z_table, self.omega_m, self.omega_l, self.omega_r)
-        self.Hz_table = lgf.get_Hz(self.z_table, self.omega_m, self.omega_l, self.omega_r, self.h0)
-        self.Dz_table = lgf.get_Dz(self.z_table, self.omega_m, self.omega_l, self.omega_r, self.h0)
-        self.D2z_table = lgf.get_D2z(self.Dz_table, prefix=self.D2_const)
+        self.rz_table = lgf.get_r(self.z_table, self.omega_m, self.omega_l)
+        self.Hz_table = lgf.get_Hz(self.z_table, self.omega_m, self.omega_l, self.h0)
+        self.Dz_table = lgf.get_Dz(self.z_table, self.omega_m, self.omega_l, self.h0)
         if use_f_numerical == False:
-            self.fz_table = lgf.get_fz(self.z_table, self.omega_m, self.omega_l, self.omega_r, self.f1_alpha)
-            self.f2z_table = lgf.get_f2z(self.z_table, self.omega_m, self.omega_l, self.omega_r, self.f1_alpha)
+            self.fz_table = lgf.get_fz(self.z_table, self.omega_m, self.omega_l, self.f_alpha)
         else:
-            self.fz_table = lgf.get_fz_numerical(self.z_table, self.Dz_table)
-            self.f2z_table = lgf.get_fz_numerical(self.z_table, -self.D2z_table)
+            self.fz_table = lgf.get_fz_numerical(self.z_table[::-1], self.Dz_table[::-1])[::-1]
         # constructs callable interpolators for rz, Hz, Dz and fz
         self.rz_interpolator = interp1d(self.z_table, self.rz_table, kind=kind)
         self.Hz_interpolator = interp1d(self.z_table, self.Hz_table, kind=kind)
         self.Dz_interpolator = interp1d(self.z_table, self.Dz_table, kind=kind)
         self.fz_interpolator = interp1d(self.z_table, self.fz_table, kind=kind)
-        self.D2z_interpolator = interp1d(self.z_table, self.D2z_table, kind=kind)
-        self.f2z_interpolator = interp1d(self.z_table, self.f2z_table, kind=kind)
         # constructs callable interpolators for rz, Hz, Dz and fz as a function of r
         self.zr_interpolator = interp1d(self.rz_table, self.z_table, kind=kind)
         self.Hr_interpolator = interp1d(self.rz_table, self.Hz_table, kind=kind)
         self.Dr_interpolator = interp1d(self.rz_table, self.Dz_table, kind=kind)
         self.fr_interpolator = interp1d(self.rz_table, self.fz_table, kind=kind)
-        self.D2r_interpolator = interp1d(self.rz_table, self.D2z_table, kind=kind)
-        self.f2r_interpolator = interp1d(self.rz_table, self.f2z_table, kind=kind)
 
 
-    def num_table(self, z_table, Dz_table, kind='cubic', zbin_factor=1000, zbin_mode='linear', D2_const=-3./7.):
+    def num_table(self, z_table, Dz_table, kind='cubic', zbin_factor=1000, zbin_mode='linear'):
         """Constructs table of cosmological linear functions from tabulated values.
 
         Parameters
@@ -211,39 +191,31 @@ class CosmoLinearGrowth:
             Integer factor to interpolate tabulated Dz for numerical calculation of fz.
         zbin_mode : str
             Redshift binning, either linear or log of 1+z.
-        D2_const : float
-            Constant infront of the D2 approximation, D2 = D2_const*(Dz)**2.
         """
         self.use_numerical = True
         self.zmin = z_table.min()
         self.zmax = z_table.max()
         self.zbin_num = len(z_table)
+        self.zbin_mode = zbin_mode
         # construct z array
         self.z_table = z_table
         # construct linear functions, use LCDM for r and H
-        self.rz_table = lgf.get_r(self.z_table, self.omega_m, self.omega_l, self.omega_r)
-        self.Hz_table = lgf.get_Hz(self.z_table, self.omega_m, self.omega_l, self.omega_r, self.h0)
+        self.rz_table = lgf.get_r(self.z_table, self.omega_m, self.omega_l)
+        self.Hz_table = lgf.get_Hz(self.z_table, self.omega_m, self.omega_l, self.h0)
         # Numerical Dz
-        self.D2_const = D2_const
         self.Dz_table = Dz_table
-        self.D2z_table = lgf.get_D2z(self.Dz_table)
         # constructs callable interpolators for rz, Hz, Dz and fz
         self.rz_interpolator = interp1d(self.z_table, self.rz_table, kind=kind)
         self.Hz_interpolator = interp1d(self.z_table, self.Hz_table, kind=kind)
         self.Dz_interpolator = interp1d(self.z_table, self.Dz_table, kind=kind)
-        self.D2z_interpolator = interp1d(self.z_table, self.D2z_table, kind=kind)
         # constructs callable interpolators for rz, Hz, Dz and fz as a function of r
         self.zr_interpolator = interp1d(self.rz_table, self.z_table, kind=kind)
         self.Hr_interpolator = interp1d(self.rz_table, self.Hz_table, kind=kind)
         self.Dr_interpolator = interp1d(self.rz_table, self.Dz_table, kind=kind)
-        self.D2r_interpolator = interp1d(self.rz_table, self.D2z_table, kind=kind)
         # Calculating fz table
         self.fz_table = lgf.get_fz_numerical(z_table, Dz_table)
         self.fz_interpolator = interp1d(self.z_table, self.fz_table, kind=kind)
         self.fr_interpolator = interp1d(self.rz_table, self.fz_table, kind=kind)
-        self.f2z_table = lgf.get_fz_numerical(self.z_table, -self.D2z_interpolator(self.z_table))
-        self.f2z_interpolator = interp1d(self.z_table, self.f2z_table, kind=kind)
-        self.f2r_interpolator = interp1d(self.rz_table, self.f2z_table, kind=kind)
 
 
     def get_rz(self, z, interp=True):
@@ -262,7 +234,7 @@ class CosmoLinearGrowth:
             return self.rz_interpolator(z)
         else:
             # Calculate rz
-            return lgf.get_r(z, self.omega_m, self.omega_l, self.omega_r)
+            return lgf.get_r(z, self.omega_m, self.omega_l)
 
 
     def get_zr(self, r):
@@ -292,7 +264,7 @@ class CosmoLinearGrowth:
             return self.Hz_interpolator(z)
         else:
             # Calculate Hz
-            return lgf.get_Hz(z, self.omega_m, self.omega_l, self.omega_r, self.h0)
+            return lgf.get_Hz(z, self.omega_m, self.omega_l, self.h0)
 
 
     def get_Hr(self, r):
@@ -322,7 +294,7 @@ class CosmoLinearGrowth:
             return self.Dz_interpolator(z)
         else:
             # Calculate Dz
-            return lgf.get_Dz(z, self.omega_m, self.omega_l, self.omega_r, self.h0)
+            return lgf.get_Dz(z, self.omega_m, self.omega_l, self.h0)
 
 
     def get_Dr(self, r):
@@ -335,38 +307,7 @@ class CosmoLinearGrowth:
         """
         return self.Dr_interpolator(r)
 
-
-    def get_D2z(self, z, interp=True):
-        """Gets the linear growth function D2 at redshift z.
-
-        Parameters
-        ----------
-        z : float
-            Redshift.
-        interp : bool
-            If true value is interpolated from pre-tabulated values, if not this
-            is calculated exactly.
-        """
-        if interp == True or self.use_numerical == True:
-            # Interpolate D2z
-            return self.D2z_interpolator(z)
-        else:
-            # Calculate D2z
-            return lgf.get_D2z(lgf.get_Dz(z, self.omega_m, self.omega_l, self.omega_r, self.h0))
-
-
-    def get_D2r(self, r):
-        """Interpolates D2 from a given value of r.
-
-        Parameters
-        ----------
-        r : float
-            Comoving distance.
-        """
-        return self.D2r_interpolator(r)
-
-
-    def _check_f1_alpha(self, alpha):
+    def _check_f_alpha(self, alpha):
         """Checks alpha is assigned a value.
 
         Parameters
@@ -375,10 +316,10 @@ class CosmoLinearGrowth:
             The power in the approximation to f(z) = Omega_m(z)**alpha
         """
         if alpha is None:
-            if self.f1_alpha is None:
-                self.f1_alpha = 5./9.
+            if self.f_alpha is None:
+                self.f_alpha = 5./9.
         else:
-            self.f1_alpha = alpha
+            self.f_alpha = alpha
 
 
     def get_fz(self, z, alpha=None, interp=True):
@@ -394,13 +335,13 @@ class CosmoLinearGrowth:
             If true value is interpolated from pre-tabulated values, if not this
             is calculated exactly.
         """
-        self._check_f1_alpha(alpha)
+        self._check_f_alpha(alpha)
         if interp == True or self.use_numerical == True:
             # Interpolate fz
             return self.fz_interpolator(z)
         else:
             # Calculate fz
-            return lgf.get_fz(z, self.omega_m, self.omega_l, self.omega_r, self.f1_alpha)
+            return lgf.get_fz(z, self.omega_m, self.omega_l, self.f_alpha)
 
 
     def get_fr(self, r):
@@ -414,55 +355,7 @@ class CosmoLinearGrowth:
         return self.fr_interpolator(r)
 
 
-    def _check_f2_alpha(self, alpha):
-        """Checks alpha is assigned a value.
-
-        Parameters
-        ----------
-        alpha : float
-            The power in the approximation to f2(z) = Omega_m(z)**alpha
-        """
-        if alpha is None:
-            if self.f2_alpha is None:
-                self.f2_alpha = 6./11.
-        else:
-            self.f2_alpha = alpha
-
-
-    def get_f2z(self, z, alpha=None, interp=True):
-        """Gets the derivative of the linear growth function f at redshift z.
-
-        Parameters
-        ----------
-        z : float
-            Redshift.
-        alpha : float
-            The power in the approximation to f2(z) = Omega_m(z)**alpha
-        interp : bool
-            If true value is interpolated from pre-tabulated values, if not this
-            is calculated exactly.
-        """
-        self._check_f2_alpha(alpha)
-        if interp == True or self.use_numerical == True:
-            # Interpolate fz
-            return self.f2z_interpolator(z)
-        else:
-            # Calculate fz
-            return lgf.get_f2z(z, self.omega_m, self.omega_l, self.omega_r, self.f2_alpha)
-
-
-    def get_fr(self, r):
-        """Interpolates f from a given value of r.
-
-        Parameters
-        ----------
-        r : float
-            Comoving distance.
-        """
-        return self.f2r_interpolator(r)
-
-
-    def calc_pk(self, kmin=1e-4, kmax=1e1, kbin_num=1000, z=0., nonlinear=True):
+    def calc_pk(self, kmin=1e-4, kmax=1e1, kbin_num=1000, z=0., nonlinear=False):
         """Calculates the linear power spectrum from CAMB and creates callable interpolator.
 
         Parameters
@@ -483,7 +376,7 @@ class CosmoLinearGrowth:
         # define parameters for CAMB to compute the power spectrum
         camb_params = cb.CAMBparams()
         camb_params.set_cosmology(H0=100.*self.h0, ombh2=self.omega_b*self.h0**2.,
-                                  omch2=(self.omega_m-self.omega_b-self.omega_r)*self.h0**2., mnu=0., omk=0.)
+                                  omch2=(self.omega_m-self.omega_b)*self.h0**2., mnu=0., omk=0.)
         camb_params.InitPower.set_params(As=self.As, ns=self.ns, r=0)
         camb_params.set_for_lmax(2500, lens_potential_accuracy=0)
         camb_params.set_matter_power(redshifts=[self.z_pk], kmax=10.*self.kmax)

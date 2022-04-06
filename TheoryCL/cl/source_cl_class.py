@@ -33,7 +33,7 @@ class SourceCL(growth.CosmoLinearGrowth):
 
     """
 
-    def __init__(self, CosmoLinearGrowth):
+    def __init__(self):
         """Initialises the class.
 
         Parameters
@@ -41,7 +41,7 @@ class SourceCL(growth.CosmoLinearGrowth):
         CosmoLinearGrowth : class
             Parent class for calculating Cosmological linear growth functions.
         """
-        super(SourceCL, self).__init__()
+        growth.CosmoLinearGrowth.__init__(self)
         self.switch2limber = None
         self.C = 3e8
         self.MPC = 3.0856e22
