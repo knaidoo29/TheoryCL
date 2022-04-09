@@ -39,7 +39,7 @@ def _get_ez(z, omega_m, omega_l):
     omega_l : float
         Present dark energy density.
     """
-    return omega_m*(1.+z)**3 + omega_l
+    return np.sqrt(omega_m*(1.+z)**3 + omega_l)
 
 
 def get_Hz(z, omega_m, omega_l, h0):
@@ -56,7 +56,7 @@ def get_Hz(z, omega_m, omega_l, h0):
     h0 : float
         Hubble constant.
     """
-    return (100.*h0)*np.sqrt(_get_ez(z, omega_m, omega_l))
+    return (100.*h0)*_get_ez(z, omega_m, omega_l)
 
 
 def _get_Da_integrand(a, omega_m, omega_l, h0):
@@ -182,7 +182,7 @@ def get_omega_m_z(z, omega_m, omega_l):
     omega_l : float
         Present dark energy density.
     """
-    return (omega_m*(1.+z)**3.)/_get_ez(z, omega_m, omega_l)
+    return (omega_m*(1.+z)**3.)/(_get_ez(z, omega_m, omega_l)**2.)
 
 
 def get_fz(z, omega_m, omega_l, alpha=0.55):
